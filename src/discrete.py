@@ -5,9 +5,10 @@ class NoEventError(Exception):
 
 class Environment(object):
   """Parent environment used to run Discrete Event Simulations"""
-  def __init__(self):
+  def __init__(self, verbosity = False):
     self.time_elapsed = 0
     self.event_queue = []
+    self.v = verbosity
     
   def add_event(self, eventfunc, time, message="some"):
     # Events are just functions. When the function is executed, the event is done
@@ -25,11 +26,11 @@ class Environment(object):
       time, eventfunc, message = heappop(self.event_queue)
       assert time > 0
       self.time_elapsed += time
-      print("Executing {} event at time {}".format(message, self.time_elapsed))
+      self.v and print("Executing {} event at time {}".format(message, self.time_elapsed))
       self.event_queue = [(t-time, e, m) for t,e,m in self.event_queue]
       eventfunc()
     except IndexError:
-      print("No events left in queue")
+      self.v and print("No events left in queue")
       raise NoEventError()
       
   def run(self):

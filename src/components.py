@@ -35,8 +35,9 @@ class Car(object):
     if self._next_node:
       self._next_node_dist_traveled += self._speed
       while True:
-        if self._next_node_dist_traveled > self._next_node_dist:
+        if self._next_node and self._next_node_dist_traveled >= self._next_node_dist:
           self._next_node_dist_traveled -= self._next_node_dist
+          print("Passing {}".format(self._next_node))
           self._last_node = self._next_node
           self._update_next_dest()
         else:
@@ -53,7 +54,6 @@ class Car(object):
     x0, y0 = self._sg.get_xy_coords(self._last_node)
     x1, y1 = self._sg.get_xy_coords(self._next_node)
     theta = math.atan2(y1-y0,x1-x0)
-    print("Theta is {}".format(theta))
     x = x0 + self._next_node_dist_traveled * math.cos(theta)
     y = y0 + self._next_node_dist_traveled * math.sin(theta)
     return  x, y
@@ -123,8 +123,6 @@ class StreetGraph(object):
   def add_edge(self, label1, label2, dist = 1):
     node1 = self._node_from_label(label1)
     node2 = self._node_from_label(label2)
-    if not node1 or not node2:
-      return
     node1.add_neighbor(node2, dist)
     node2.add_neighbor(node1, dist)
 
@@ -141,7 +139,7 @@ class StreetGraph(object):
     for n in self._nodes:
       if n._label == label:
         return n
-    return None
+    raise Exception("No node could be found corresponding to label: {}".format(label))
 
   def shortest_path(self, label1, label2):
     # Returns a list of labels corresponding to the shortest path from label1 to label2 and the total distance
@@ -175,8 +173,5 @@ class StreetGraph(object):
     while bt:
       path.insert(0, bt._label)
       bt = prev[bt]
-      
-    print(dist)
-    print(prev)
 
     return path, dist[t]
