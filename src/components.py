@@ -1,6 +1,8 @@
 import copy
 import math
 
+from util import quadratic
+
 class Car(object):
   """web enabled car"""
   def __init__(self, source, destination, label, sg, speed, rad = 1):
@@ -24,14 +26,16 @@ class Car(object):
   def getRad(self):
     return self._rad
 
-  def getLinkLife(self, target_car):
-    return self._linkLife[target_car]
+  def getLinkLife(self, target_car_label):
+    if target_car_label in self._linkLife:
+      return self._linkLife[target_car]
+    else:
+      return None
 
-  def setLinkLife(self, target_car, linkVal):
-    assert isinstance(target_car, Car)
+  def setLinkLife(self, target_car_label, linkVal):
     self._linkLife[target_car] = linkVal
 
-  def resetLink(self):
+  def resetLinks(self):
     self._linkLife.clear()
 
   def set_speed(self, speed):
@@ -78,7 +82,6 @@ class Car(object):
     x = x0 + self._next_node_dist_traveled * math.cos(theta)
     y = y0 + self._next_node_dist_traveled * math.sin(theta)
     return  x, y
-
 
 #########################################################################################
 
@@ -132,15 +135,10 @@ class StreetGraph(object):
     self._nodeCls = nodeCls
     self._carCls = carCls
 
-  # def add_car(self, origin, destination, label, speed = 1):
-  #   delorian = self._carCls(origin, destination, label, self, speed)
-  #   self._cars.add(delorian)
-  #   return delorian
-
-  def add_car(self, vehicle):
-    assert isinstance(vehicle, Car)
-    self._cars.add(vehicle)
-    return
+  def add_car(self, origin, destination, label, speed = 1):
+    delorian = self._carCls(origin, destination, label, self, speed)
+    self._cars.add(delorian)
+    return delorian
 
   def add_node(self, x, y, label):
     node = self._nodeCls(x, y, label)
@@ -166,6 +164,27 @@ class StreetGraph(object):
       if n._label == label:
         return n
     raise Exception("No node could be found corresponding to label: {}".format(label))
+
+  def _car_from_label(self, label):
+    for c in self._cars:
+      if c._label == label:
+        return c
+    raise Exception("No car could be found corresponding to label: {}".format(label))
+
+  def get_car_velocity(self, car):
+    ''' Returns a tuple of (vel_x, vel_y) corresponding to the car matching LABEL in the street graph'''
+    x, y = car.position()
+    sp = car.getSpeed()
+    dest_x, dest_y = self.get_xy_coords(car.getNextNode())
+    vx1 = dest_x - x
+    vy1 = dest_y - y
+    vnorm1 = math.sqrt(vx^2 + vy^2)
+    try:
+      vel_x = vx / vnorm1 * sp
+      vel_y = vy / vnorm1 * sp
+      return vel_x, vel_y
+    except ZeroDivisionError:
+      return 0, 0
 
   def shortest_path(self, label1, label2):
     # Returns a list of labels corresponding to the shortest path from label1 to label2 and the total distance
@@ -204,17 +223,71 @@ class StreetGraph(object):
 
 #########################################################################################
 
+class AccessPoint(object):
+  """
+  Simple node in a graph containing x + y coordinates for drawing
+  Represents unlimited connection to the internet
+  """
+  def __init__(self, x, y):
+    self._x = x
+    self._y = y
+
+  def position(self):
+    return self._x, self._y
+
+
 class RoutingGraph(Object):
   """Routing Graph keeps track of the LinkLife/Edges"""
   def __init__(self, sGraph):
-    assert isinstance(sGraph, StreetGraph)
-    self._nodes = sGraph._cars
-    edges = dict()
-    setEdges(sGraph)
+    self._cars = sGraph._cars 
+    self._edges = dict()
 
-  def setEdges(self):
+  def update_edges(self):
     for c in self._nodes:
       for k, v in c._linkLife:
-        edges[c] = (k, v)
+        self._edges[c] = (k, v)
+
+  def set_link_lifetimes(self):
+    # Sets Link Life of car (edges)
+    for c in sGraph._cars:
+      c.resetLink()
+      x, y = c.position()
+      for ci in sGraph._cars:
+        if (c == ci):
+          continue
+        xi, yi = ci.position()
+        dX = x - xi
+        dY = y - yi
+        dist = math.sqrt(dX**2 + dY**2)
+        if dist > c.getRad() or dist > ci.getRad():
+          continue
+        else:
+          linkVal = detLinkLife(c, ci, sGraph)
+          c.setLinkLife(ci, linkVal)
+
+  @classmethod
+  def determine_link_life(cls, car1, car2, sGraph):
+    a_x, a_y = car1.position()
+    b_x, b_y = car2.position()
+    av_x, av_y = sGraph.get_car_velocity(car1.label)
+    bv_x, bv_y = sGraph.get_car_velocity(car2.label)
+    a = a_x - b_x
+    b = a_y - b_y
+    c = av_x - bv_x
+    d = av_x - bv_y
+    
+    c_0 = a^2 + b^2 - car1.getRad()^2
+    c_1 = 2*a*c + 2*b*d
+    c_2 = c^2 + d^2
+    
+    try:
+      return max(quadratic(c_2, c_1, c_0))
+    except ZeroDivisionError:
+      return inf
+
+
+
+
+
 
 
