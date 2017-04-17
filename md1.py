@@ -22,7 +22,7 @@ if __name__ == "__main__":
   seed(122)
   lamb = 20
   mu = 30
-  N = 5000
+  N = 10000
 
   QueueSim = Environment(verbosity=True)
   Q = MD1Queue(lamb, mu, QueueSim)

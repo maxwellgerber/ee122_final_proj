@@ -25,9 +25,9 @@ if __name__ == "__main__":
   seed(122)
   lamb = 20
   mu = 27
-  N = 6000
+  N = 1000000
 
-  QueueSim = Environment(verbosity=True)
+  QueueSim = Environment(verbosity=False)
   Q = MM1Queue(lamb, mu, QueueSim)
   Q.generate_arrival_events(N)
   QueueSim.run()

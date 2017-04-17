@@ -15,7 +15,8 @@ class Environment(object):
   def add_event(self, eventfunc, time, message="some"):
     # Events are just functions. When the function is executed, the event is done
     # Time is relative- an event with time=5 added at time_elapsed=2 will occur at time_elapsed=7
-    heappush(self.event_queue, (time, eventfunc, message))
+    execution_time = self.time_elapsed + time
+    heappush(self.event_queue, (execution_time, eventfunc, message))
     
   def add_fixed_event(self, eventfunc, time, message="some"):
     # Adds an event at an absolute time - not relative
@@ -36,9 +37,9 @@ class Environment(object):
     try:
       time, eventfunc, message = heappop(self.event_queue)
       assert time > 0
-      self.time_elapsed += time
+      self.time_elapsed = time
       self.v and print("Executing {} event at time {}".format(message, self.time_elapsed))
-      self.event_queue = [(t-time, e, m) for t,e,m in self.event_queue]
+      # self.event_queue = [(t-time, e, m) for t,e,m in self.event_queue]
       eventfunc()
       self.event_count += 1
       self.do_regular_events()
