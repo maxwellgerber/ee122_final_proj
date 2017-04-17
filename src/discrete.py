@@ -9,6 +9,8 @@ class Environment(object):
     self.time_elapsed = 0
     self.event_queue = []
     self.v = verbosity
+    self.regular_events = []
+    self.event_count = 0
     
   def add_event(self, eventfunc, time, message="some"):
     # Events are just functions. When the function is executed, the event is done
@@ -18,7 +20,16 @@ class Environment(object):
   def add_fixed_event(self, eventfunc, time, message="some"):
     # Adds an event at an absolute time - not relative
     self.add_event(eventfunc, time-self.time_elapsed, message)
-    
+
+  def add_regular_event(self, eventfunc, interval):
+    # Adds an event that occurs every INTERVAL number of events- for logging purposes
+    self.regular_events.append((interval, eventfunc))
+
+  def do_regular_events(self):
+    for interval, eventfunc in self.regular_events:
+      if self.event_count % interval == 0:
+        eventfunc()
+
   def do_next_event(self):
     # Pop the soonest event off the heap and run it
     # Decrease the time of all the other events
@@ -29,6 +40,8 @@ class Environment(object):
       self.v and print("Executing {} event at time {}".format(message, self.time_elapsed))
       self.event_queue = [(t-time, e, m) for t,e,m in self.event_queue]
       eventfunc()
+      self.event_count += 1
+      self.do_regular_events()
     except IndexError:
       self.v and print("No events left in queue")
       raise NoEventError()
