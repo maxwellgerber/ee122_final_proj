@@ -39,7 +39,6 @@ class Environment(object):
       assert time > 0
       self.time_elapsed = time
       self.v and print("Executing {} event at time {}".format(message, self.time_elapsed))
-      # self.event_queue = [(t-time, e, m) for t,e,m in self.event_queue]
       eventfunc()
       self.event_count += 1
       self.do_regular_events()

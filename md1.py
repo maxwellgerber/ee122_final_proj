@@ -1,7 +1,8 @@
 from src.discrete import Environment
 from src.queue import Queue
 from random import expovariate, seed
-
+from tabulate import tabulate
+from math import e
 class MD1Queue(Queue):
   """MD1 Queue discrete time simulator"""
   def __init__(self, lamb, mu, env):
@@ -17,12 +18,18 @@ class MD1Queue(Queue):
   def service_rate(self):
     return 1/self.mu
 
+  def expected_dist(self, i):
+    if i == 0:
+      return 1 - 1/self.lamb
+    l = 1/self.lamb
+    return (1 - l) * (e**(i*l) - 1)
+
 
 if __name__ == "__main__":
   seed(122)
-  lamb = 20
-  mu = 30
-  N = 10000
+  lamb = 130
+  mu = 200
+  N = int(1e5)
 
   QueueSim = Environment(verbosity=True)
   Q = MD1Queue(lamb, mu, QueueSim)
@@ -41,9 +48,16 @@ if __name__ == "__main__":
   rho = lamb/mu
   expected_wait = rho/(2*mu*(1-rho))
   expected_overall = 1/mu + rho/(2*mu*(1-rho))
-  print("Average wait time: \t\t\t{0:.4f}\nAverage service time: \t\t{1:.4f}\nOverall time: \t\t\t\t{2:.4f}".format(avg_wait, avg_service, avg_service + avg_wait))
-  print("Predicted wait time: \t\t{0:.4f} \t\tSimulation error: {1:.2f}%".format(expected_wait, (avg_wait - expected_wait) / expected_wait * 100))
-  print("Predicted overall time: \t{0:.4f} \t\tSimulation error: {1:.2f}%".format(expected_overall, (avg_service + avg_wait - expected_overall) / expected_overall * 100))
-
+  expected_in_sys = rho + .5 * rho**2 / (1 - rho)
+  tbl = [["Average wait time:", avg_wait],
+         ["Average service time:", avg_wait],
+         ["Overall time:", avg_service + avg_wait],
+         ["Predicted wait time:", expected_wait],
+         ["Wait time error:", 0],
+         ["Predicted overall time:", expected_overall],
+         ["Overall time error:", (avg_service + avg_wait - expected_overall) / expected_overall]]
+  print(tabulate(tbl, floatfmt=".3f", tablefmt="fancy_grid"))
+  Q.print_distribution()
+  print("Num expected in sys = {}".format(expected_in_sys))
 
 

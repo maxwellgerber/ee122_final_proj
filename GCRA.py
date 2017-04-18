@@ -1,4 +1,4 @@
-from discrete import Environment
+from src.discrete import Environment
 
 class LeakyBucket(object):
   """Leaky Bucket GCRA example from Feb 22 Discussion"""
@@ -16,7 +16,7 @@ class LeakyBucket(object):
     
   def handle_cart_arrival(self):
     if self.X >= self.T:
-      print("Added {} worth of stuff to a cart".format(self.T))
+      print("Added {} worth of data to a cart".format(self.T))
       self.X -= self.T
       self.carts_filled += 1
       return True
@@ -26,7 +26,7 @@ class LeakyBucket(object):
 
 
 if __name__ == "__main__":
-  BucketSim = Environment()
+  BucketSim = Environment(verbosity=True)
   B = LeakyBucket(10, 3)
   B.set_X(13)
 

@@ -1,3 +1,6 @@
+from tabulate import tabulate
+from random import random
+
 class Queue(object):
   """Queue discrete time simulator"""
   def __init__(self, env):
@@ -36,7 +39,8 @@ class Queue(object):
       self.env.add_event(self.enqueue_packet, t, "Packet Arrival")
 
     for i in range(1, int(t*20)):
-      self.env.add_event(self.log_stats, i/20, "Logging statistics")
+      salty = i/20 + random()/100
+      self.env.add_event(self.log_stats, salty, "Logging statistics")
 
   def log_stats(self):
     i = len(self.packets) + self.in_use
@@ -48,16 +52,22 @@ class Queue(object):
 
   def print_distribution(self):
     total_dist = sum(self.pkt_count)
-    print("Distribution of packets in system")
-    print("#Pkts\tAcutal\tExpected\tError")
+    print("Distribution of number of packets in the system")
+    headers = ["#Pkts", "Actual", "Expected", "Error (%)"]
+    tbl = []
+    avg_count = 0
     for i, count in enumerate(self.pkt_count):
+      avg_count += i * count/total_dist
       actual_dist = count
       expected_dist = int(self.expected_dist(i) * total_dist)
       try:
-        err = (actual_dist - expected_dist)/expected_dist * 100
+        err = (actual_dist - expected_dist)/expected_dist
       except ZeroDivisionError:
         err = 0
-      print("{}:\t\t{}\t\t{}\t\t\t{:.2f}%".format(i, actual_dist, expected_dist, err))
+      if i < 8:
+        tbl.append([i, actual_dist/total_dist, expected_dist/total_dist, err])
+    print(tabulate(tbl, headers=headers, tablefmt="fancy_grid", floatfmt=".4f"))
+    print("Average number in system: {}".format(avg_count))
 
 
   def expected_dist(self, i):
